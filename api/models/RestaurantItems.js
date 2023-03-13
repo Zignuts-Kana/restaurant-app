@@ -39,7 +39,6 @@ module.exports = {
     itemName:{
       type:'string',
       required:true,
-      unique:true,
     }
   },
 

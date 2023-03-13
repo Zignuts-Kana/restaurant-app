@@ -24,8 +24,11 @@ module.exports.routes = {
   'GET /admin/profile':'RestaurantAdminController.getSelfProfile',//get admin profile
   'GET /user/profile/:userId':'RestaurantUserController.getUserProfile',//get any profile
   'GET /user/profile':'RestaurantUserController.getUserProfile',//get any profile
+  'GET /restaurant/:restaurantId/users':'RestaurantController.getAllUserOfRestaurant',//get all users of restaurant
   'GET /user/:userId/status/change':'RestaurantUserController.changeUserStatus',//Change user status
   'GET /restaurant/:restaurantId/status/change':'RestaurantUserController.changeRestaurantStatus',//Change restaurant status
+  'GET /restaurant/menu/:menuId/status/change':'RestaurantMenuController.changeMenuStatus',//change status of category to unavailable
+  'GET /menu/item/:itemId/status/change':'RestaurantItemsController.changeItemStatus',//change status of item to unavailable
   'GET /restaurant/:restaurantId':'RestaurantController.getRestaurant',//detail of restaurant
   'GET /user/profile/restaurant':'RestaurantUserController.getUserProfile',//get profile with restaurant
 
@@ -52,7 +55,7 @@ module.exports.routes = {
   'POST /user/restaurant/:restaurantId/menu/add':'RestaurantMenuController.createMenuCategory',//add new category
   'POST /user/restaurant/menu/:menuId/update':'RestaurantMenuController.editMenuCategory',//update category
   'POST /menu/:menuId/item/add':'RestaurantItemsController.addItem',//add new item in category
-  'POST /menu/item/:itemId/update':'RestaurantItemsController.editItem',//add new item in category
+  'POST /menu/item/:itemId/update':'RestaurantItemsController.editItem',//update item in category
 
   'GET /restaurant/menu/:menuId/delete':'RestaurantMenuController.deleteMenuCategory',//delete category
   'GET /menu/items/:itemId/delete':'RestaurantItemsController.deleteItem',//delete item

@@ -17,6 +17,9 @@ module.exports = async function (req, res, proceed) {
     if (!user || !user.authToken) {
       return res.status(401).send({Message:'Unauthorized'});
     }
+    if (user.authToken !== token) {
+      return res.status(401).send({Message:'Expired Token!'});
+    }
     loggedInUser = user;
   }
   if (req.query.token) {
@@ -24,6 +27,9 @@ module.exports = async function (req, res, proceed) {
     const user = await sails.helpers.jwtAuthHelper(token);
     if (!user && !user.token) {
       return res.status(401).send({Message:'Unauthorized'});
+    }
+    if (user.authToken !== token) {
+      return res.status(401).send({Message:'Expired Token!'});
     }
     loggedInUser = user;
   }

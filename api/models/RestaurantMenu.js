@@ -37,7 +37,6 @@ module.exports = {
     category:{
       type:'string',
       required:true,
-      unique:true,
     },
     managerId:{
       model:'restaurantuser'

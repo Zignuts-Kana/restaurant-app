@@ -20,7 +20,7 @@ module.exports = {
       }
       const { name, email, password } = req.body;
       const isManager = req.body.isManager ? true : undefined;
-      const isWorker = req.body.idWorker ? true : undefined;
+      const isWorker = req.body.isWorker ? true : undefined;
       const isCustomer = req.body.isCustomer ? true : undefined;
       const hashPassword = bcryptjs.hashSync(password, 8);
       let user = await RestaurantUser.create({
@@ -88,13 +88,12 @@ module.exports = {
       let user = req.user;
       const userId = req.params.userId;
       user = await RestaurantUser.findOne({ id: userId }).populate('restaurants');
-      console.log(user.restaurants[0].admin);
       if (!user) {
         return res.status(400).send({ Message: 'Can not find Data!' });
       }
       if (
         user.id === userId &&
-        !(user.id === user.restaurants[0].admin || user.id === user.restaurants[0].owner || user.isManager)
+        ! (user.id !== user.restaurants[0].owner || user.isManager?user.isManager:true)
       ) {
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
@@ -131,10 +130,33 @@ module.exports = {
     try {
       let user = req.user;
       const userId = req.params.userId;
-      const reqUser = await RestaurantUser.findOne({id:userId}).populate('restaurants');
+      const restaurantId = req.params.restaurantId?req.params.restaurantId:undefined;
+      if (user.isSuperAdmin && !restaurantId) {
+        return res.status(400).send({Message:'Restaurant ID id require!'});
+      }
+      let restaurant;
+      if (restaurantId) {
+        const restaurant = await Restaurant.findOne({id:restaurantId});
+        if (!restaurant) {
+          return res.status(400).send({Message:'Error while fetching data!'});
+        }
+      }
+      let reqUser;
+      if (user.isSuperAdmin === false) {
+        reqUser = await RestaurantUser.findOne({id:userId}).populate('restaurants');
+      }
+      if (!reqUser) {
+        return res.status(400).send({Message:'Data not found!'});
+      }
       if (
-        user.id === userId &&
-        !(user.id === user.restaurants[0].admin || user.id === user.restaurants[0].owner || user.isManager)
+        user.id === userId && user.isSuperAdmin === false &&
+        (user.id !== user.restaurants[0].admin || user.id !== user.restaurants[0].owner || user.isManager?user.isManager:true)
+      ) {
+        return res.status(403).send({ Message: 'Restricted Action!' });
+      }
+      if (
+        user.id === userId && user.isSuperAdmin && restaurant &&
+        (user.id !== restaurant.admin || user.id !== restaurant.owner || user.isManager?user.isManager:true)
       ) {
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
@@ -142,7 +164,6 @@ module.exports = {
       if (!deletedUser) {
         return res.status(400).send({ Message: 'error while delete!' });
       }
-      console.log();
       await Restaurant.removeFromCollection(
           reqUser.restaurants[0].id,
           'users',
@@ -160,8 +181,15 @@ module.exports = {
       const user = req.user;
       const userId = req.params.userId;
       if (
-        user.id === userId &&
-        !(user.id === restaurant.admin || user.id === owner || user.isManager)
+        user.id === userId && !user.isSuperAdmin
+      ) {
+        return res.status(403).send({ Message: 'Restricted Action!' });
+      }
+      let restaurant = await Restaurant.findOne({admin:user.id});
+      restaurant = restaurant ? restaurant : user.restaurants && user.restaurants.length ? user.restaurants[0] : undefined;
+      if (
+        (user.id === userId && restaurant) &&
+        (user.id === restaurant.admin || user.id === restaurant.owner || user.isManager?user.isManager:false)
       ) {
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
@@ -171,6 +199,10 @@ module.exports = {
       }
       if (!reqUser) {
         return res.status(400).send({Message:'user not found!'});
+      }
+      const superCondition = (user.isSuperAdmin === false) ? true : user.isSuperAdmin;
+      if ( !superCondition && (reqUser.isManager || reqUser.isSuperAdmin === false?true:true)) {
+        return res.status(403).send({Message:'Restricted Action!'});
       }
       let updatesUser = await RestaurantUser.update({ id: userId }).set({ isActive: reqUser.isActive === true ? false : true }).fetch();
       if (!updatesUser.length) {
@@ -187,9 +219,10 @@ module.exports = {
       const user = req.user;
       const restaurantId = req.params.restaurantId;
       const restaurant = await Restaurant.findOne({ id: restaurantId });
+      const superCondition = (user.isSuperAdmin === false) ? true : user.isSuperAdmin;
       if (
-        !restaurant ||
-        !(user.id === restaurant.admin || user.id === owner || user.isManager)
+        (!restaurant && !superCondition) &&
+        !(user.id === restaurant.admin || user.id === restaurant.owner || user.isManager?user.isManager:false)
       ) {
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
