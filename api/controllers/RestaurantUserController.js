@@ -179,6 +179,7 @@ module.exports = {
   changeUserStatus: async (req, res) => {
     try {
       const user = req.user;
+      console.log(user);
       const userId = req.params.userId;
       if (
         user.id === userId && !user.isSuperAdmin
@@ -201,7 +202,7 @@ module.exports = {
         return res.status(400).send({Message:'user not found!'});
       }
       const superCondition = (user.isSuperAdmin === false) ? true : user.isSuperAdmin;
-      if ( !superCondition && (reqUser.isManager || reqUser.isSuperAdmin === false?true:true)) {
+      if ( (user.isManager && reqUser.isManager || !superCondition) || (user.isWorker) || user.isCustomer || (user.isSuperAdmin === false && reqUser.isSuperAdmin)) {
         return res.status(403).send({Message:'Restricted Action!'});
       }
       let updatesUser = await RestaurantUser.update({ id: userId }).set({ isActive: reqUser.isActive === true ? false : true }).fetch();
@@ -220,10 +221,30 @@ module.exports = {
       const restaurantId = req.params.restaurantId;
       const restaurant = await Restaurant.findOne({ id: restaurantId });
       const superCondition = (user.isSuperAdmin === false) ? true : user.isSuperAdmin;
+      // if (
+      //   (!restaurant && !superCondition) &&
+      //   !(user.id === restaurant.admin || user.id === restaurant.owner || user.isManager?user.isManager:false)
+      // ) {
+      //   return res.status(403).send({ Message: 'Restricted Action!' });
+      // }
       if (
-        (!restaurant && !superCondition) &&
-        !(user.id === restaurant.admin || user.id === restaurant.owner || user.isManager?user.isManager:false)
+        user.isSuperAdmin ||
+        (user.isSuperAdmin && user.isSuperAdmin === false)
+          ? true
+          : false
       ) {
+        const restaurant = await Restaurant.findOne({ id: restaurantId });
+        if (
+          restaurant &&
+          !(user.id !== restaurant.owner || user.id !== restaurant.admin)
+        ) {
+          return res.status(403).send({ Message: 'Restricted Action!' });
+        }
+      } else if (user.isManager) {
+        if (user.restaurants.id !== restaurantId) {
+          return res.status(403).send({ Message: 'Restricted Action!' });
+        }
+      } else if (!user.isManager && !superCondition){
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
       const updatedRestaurant = await Restaurant.updateOne({ id: restaurantId }).set({ isOpen: restaurant.isOpen === true?false:true });

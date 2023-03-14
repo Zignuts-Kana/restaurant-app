@@ -31,6 +31,7 @@ module.exports.routes = {
   'GET /menu/item/:itemId/status/change':'RestaurantItemsController.changeItemStatus',//change status of item to unavailable
   'GET /restaurant/:restaurantId':'RestaurantController.getRestaurant',//detail of restaurant
   'GET /user/profile/restaurant':'RestaurantUserController.getUserProfile',//get profile with restaurant
+  'GET /restaurant/:restaurantId/list':'RestaurantMenuController.listOfMenuForPublic',//give formatted list of restaurant menu
 
   'POST /admin/login':'RestaurantAdminController.loginAdmin',//login super admin or admin
   'POST /admin/restaurant/create':'RestaurantController.createRestaurant',//create restaurant and admin

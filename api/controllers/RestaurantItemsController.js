@@ -9,7 +9,6 @@ module.exports = {
   addItem: async (req, res) => {
     try {
       const user = req.user;
-      console.log(user);
       const menuId = req.params.menuId;
       const menu = await RestaurantMenu.findOne({ id: menuId }).populate(
         'items'
@@ -186,7 +185,11 @@ module.exports = {
         ) {
           return res.status(403).send({ Message: 'Restricted Action!' });
         }
-      } else if (!user.isManager) {
+      }  else if (user.isManager) {
+        if (user.restaurants.id !== restaurantId) {
+          return res.status(403).send({ Message: 'Restricted Action!' });
+        }
+      } else if (!user.isManager && !superCondition){
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
       item = await RestaurantItems.updateOne({id:itemId}).set({isAvailable:item.isAvailable === false ? true :false})

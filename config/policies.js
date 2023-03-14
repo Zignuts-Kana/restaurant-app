@@ -20,7 +20,10 @@ module.exports.policies = {
   // '*': true,
   '*':'is-logged-in',
   'RestaurantAdminController':{
-    'loginAdmin':true
+    'loginAdmin':true,
+  },
+  'RestaurantUserController':{
+    'loginUser':true,
   }
 
 };

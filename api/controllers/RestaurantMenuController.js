@@ -180,7 +180,11 @@ module.exports = {
         ) {
           return res.status(403).send({ Message: 'Restricted Action!' });
         }
-      } else if (!user.isManager) {
+      }else if (user.isManager) {
+        if (user.restaurants.id !== restaurantId) {
+          return res.status(403).send({ Message: 'Restricted Action!' });
+        }
+      } else if (!user.isManager && !superCondition){
         return res.status(403).send({ Message: 'Restricted Action!' });
       }
       await RestaurantMenu.updateOne({ id: menuId }).set({
@@ -195,7 +199,34 @@ module.exports = {
       console.log(error);
       return res.status(500).send({ Error: error });
     }
-  },
+  },listOfMenuForPublic :async (req,res)=>{
+    try {
+      // const user = req.user;
+      const restaurantId = req.params.restaurantId;
+      const restaurant = await Restaurant.findOne({id:restaurantId});
+      if (!restaurant) {
+        return res.status(400).send({Message:'Can not find data!'});
+      }
+      const categories = await RestaurantMenu.find({restaurantId}).populate('items');
+      const restaurantItems = {};
+      categories.forEach((category,index)=>{
+        console.log(index,category.category);
+        category.items.forEach(item=>{
+          if (!restaurantItems[categories[index].category]) {
+            console.log('1',item.itemName);
+            restaurantItems[categories[index].category] = item.itemName === undefined?[]:[item.itemName];
+          }else{
+            console.log('2',item.itemName);
+            restaurantItems[categories[index].category].push(item.itemName);
+          }
+        });
+      });
+      return res.status(200).send({Restaurant:restaurant.restaurantName , restaurantItems});
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({Error:error});
+    }
+  }
   // createMenuCategory:async(req,res)=>{
   //     try {
 
